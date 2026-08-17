@@ -92,9 +92,11 @@ Every filter is a faceted list with **match counts**, so you can see which value
 clicking before you click them, and a removable chip summary sits above the results so you can
 always see and undo any single choice.
 
-Source counts come from the per-source status rather than from the filtered results, so picking one
-source does not zero out the other two and strand you with a filter you cannot widen. There is a
-test for that.
+Every configured source is queried on every request, and the source and author filters are applied
+*after* the facets are built. Picking "The Guardian" therefore leaves NewsAPI and the NYT on screen
+with live counts, instead of zeroing them out and stranding you with a filter you cannot widen.
+Counts come from the deduped results, so they sum to the stated total rather than double-counting a
+story two sources both carried. There are tests for both.
 
 Results are a scannable list rather than a card grid: search is read against a query, so three
 times as many headlines above the fold and a single column for the eye to travel beat big images.
@@ -210,25 +212,6 @@ for the byline row that appears five times in the design.
 **KISS** — no state-management ceremony. Server data in TanStack Query, preferences in one small
 Zustand store, transient filter state in the URL. The slide-in sheet is a native `<dialog>`, which
 gives the focus trap, inert background and Escape-to-close for free instead of reimplementing them.
-
----
-
-## Design
-
-The UI implements the supplied mockup: centred `VOICE` wordmark between icon groups, the
-ten-item section rail with an underlined active item, the hero story with its byline row and
-display headline, the three sidebar stories separated by hairline rules, and the Trending authors
-grid.
-
-- **Type** — `Archivo` for display and headlines, `Inter` for UI and body copy. Both are
-  self-hosted by `next/font`, so the container makes no runtime request to Google.
-- **Icons** — Google **Material Symbols** (Rounded, weight 300), self-hosted from the
-  `material-symbols` npm package. Wrapped in one `<Icon>` component.
-- **Colour** — deliberately achromatic; colour comes from photography. Defined as CSS variables,
-  which is what lets the included dark theme be a token swap rather than a second set of components.
-- **Author avatars** — only the Guardian returns contributor headshots, so bylines without one get
-  deterministic initials on a muted tint derived from the author's id (stable across server and
-  client renders — a random tint would be a hydration mismatch).
 
 ---
 
