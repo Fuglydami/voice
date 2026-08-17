@@ -3,7 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Emits a self-contained server bundle so the Docker runner stage does not
   // need node_modules. See Dockerfile.
-  output: "standalone",
+  //
+  // Skipped on Vercel, which builds its own output and fails on the standalone
+  // layout with a missing `next-server.js.nft.json`. Docker is the deployment
+  // target the brief asks for; Vercel only hosts the demo.
+  output: process.env.VERCEL ? undefined : "standalone",
 
   images: {
     // An aggregator cannot enumerate its image hosts ahead of time: NewsAPI

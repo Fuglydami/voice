@@ -301,9 +301,9 @@ mobile widths and compare against the mockup.
 | `GUARDIAN_KEY` | The Guardian | open-platform.theguardian.com/access | No* |
 | `NYT_KEY` | New York Times | developer.nytimes.com | No* |
 
-\* All optional individually. With none set the app serves fixture content. Note the NewsAPI free
-"Developer" tier only authorises requests from `localhost`, which covers local and Docker-local use;
-Guardian and NYT developer keys work anywhere.
+\* All optional individually; with none set the app has nothing to show and says so. NewsAPI's free
+"Developer" plan restricts browser requests to a `localhost` origin, but that is a CORS rule and
+this app calls the API server-side, so all three sources work locally and when deployed.
 
 All three are read **only** in `src/lib/env.ts`, which is imported exclusively by server modules —
 no `NEXT_PUBLIC_` prefix anywhere, so keys cannot reach the browser bundle.

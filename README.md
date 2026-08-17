@@ -7,6 +7,11 @@ front page.
 Built for the Frontend take-home challenge. Next.js 16 (React 19) · TypeScript strict ·
 Tailwind CSS v4 · shadcn/ui (Radix) · TanStack Query · Zustand · Zod · Vitest · Docker.
 
+**Live demo → <https://voice-lilac-seven.vercel.app>**
+
+Running against real API keys held server-side, with all three sources live. Nothing to install and
+no keys to obtain; to run it yourself, see [Quick start](#quick-start) below.
+
 ---
 
 ## Quick start
@@ -59,10 +64,11 @@ All three are optional and free.
 Put them in `.env` (Docker) or `.env.local` (local dev). Restart to pick them up. Visit
 `/api/sources` to confirm what the server sees.
 
-**One caveat worth knowing:** NewsAPI's free *Developer* tier only authorises requests whose origin
-is `localhost`. That covers local development and `docker compose up` on your own machine, but a
-NewsAPI key will be rejected on a public deployment. The Guardian and NYT keys work anywhere, so
-the three-source requirement still holds in every environment.
+**One caveat worth knowing:** NewsAPI's free *Developer* plan restricts **browser** requests to a
+`localhost` origin. That restriction is a CORS rule, and it does not apply here: this app calls
+NewsAPI from its own server, so there is no `Origin` header and nothing to reject. All three
+sources work locally and on the deployed demo alike. The plan is still labelled development-use by
+NewsAPI, so treat the free key as fine for a demo and not for production traffic.
 
 Keys are read in exactly one module — `src/lib/env.ts`, marked `server-only` — and none uses the
 `NEXT_PUBLIC_` prefix, so a key cannot reach the browser bundle. The browser never talks to a news
@@ -304,8 +310,9 @@ and a native `<dialog>` for the menu so focus management is the platform's job, 
 
 - **Outbound links remain prominent.** The reader page always credits the publisher and offers a
   direct link to the original, which is what an aggregator should do.
-- **NewsAPI's free tier is localhost-only**, so a public deployment would fall back to two sources.
-  See the note under [API keys](#api-keys).
+- **NewsAPI's free plan is labelled development-use.** Its `localhost` restriction is a CORS rule
+  on browser requests and does not affect this app, which calls the API server-side — but the plan
+  is not intended for production traffic. See the note under [API keys](#api-keys).
 
 ---
 

@@ -14,10 +14,10 @@ const TOP_HEADLINES = "https://newsapi.org/v2/top-headlines";
 /**
  * NewsAPI.org adapter.
  *
- * Note the free "Developer" tier only authorises requests whose origin is
- * localhost — which covers local development and `docker compose up` on the
- * reviewer's machine, but not a public deployment. When the key is rejected the
- * provider surfaces a clean error and the other sources carry the page.
+ * The free "Developer" plan restricts browser requests to a `localhost` origin.
+ * That is a CORS rule and does not apply to this call, which is made from the
+ * server with no `Origin` header — verified against a public deployment. The
+ * plan is still development-use, so treat the free key accordingly.
  */
 export const newsApiProvider: NewsProvider = {
   id: "newsapi",
