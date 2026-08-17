@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{md,json,mjs,ts}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "icons:subset": "node scripts/subset-icons.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
@@ -27,7 +28,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.31.0",
-    "material-symbols": "^0.40.2",
     "next": "16.3.1",
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
@@ -52,8 +52,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "jsdom": "^26.1.0",
+    "material-symbols": "^0.40.2",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "subset-font": "^2.5.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.7"

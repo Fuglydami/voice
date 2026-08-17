@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { Masthead } from "@/components/layout/Masthead";
 import { CategoryNav } from "@/components/layout/CategoryNav";
 import { Footer } from "@/components/layout/Footer";
@@ -27,6 +28,22 @@ const inter = Inter({
   display: "swap",
 });
 
+/**
+ * Material Symbols, subset to the twenty icons this app draws — see
+ * `scripts/subset-icons.mjs`. The published font is 4.95 MB, which over a real
+ * network left every icon showing as its own ligature text until it arrived.
+ *
+ * `display: "block"` rather than "swap" precisely because the fallback here is
+ * the word "search", not a different typeface. At 269 KB the block period is no
+ * longer a visible wait.
+ */
+const materialSymbols = localFont({
+  src: "./fonts/material-symbols-rounded-subset.woff2",
+  variable: "--font-icons",
+  display: "block",
+  weight: "300",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "VOICE: news from every source, in one place",
@@ -48,7 +65,7 @@ export const viewport: Viewport = { themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(archivo.variable, inter.variable)}>
+    <html lang="en" className={cn(archivo.variable, inter.variable, materialSymbols.variable)}>
       <head>
         {/* Applies a stored dark-mode choice before first paint, so a reader who
             picked dark never sees a white flash between navigations. */}

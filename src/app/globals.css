@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "material-symbols/rounded.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -327,14 +326,21 @@
   font-size: var(--text-meta);
 }
 
-/* Material Symbols: the rounded set at a weight that matches the mockup's
-   hairline icons. Sized by the consuming component via font-size. */
+/* Material Symbols, subset and loaded via next/font in `layout.tsx`. The
+   variation axes are baked into the subset at FILL 0, wght 300, GRAD 0,
+   opsz 24, so there is nothing left to set here. Sized by font-size. */
 .material-symbols-rounded {
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 300,
-    "GRAD" 0,
-    "opsz" 24;
+  font-family: var(--font-icons), sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
