@@ -1,26 +1,438 @@
 @import "tailwindcss";
+@import "material-symbols/rounded.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+/* ---------------------------------------------------------------------------
+   VOICE design system
+
+   One source of truth for colour, type, space and shape. Components consume
+   these tokens and define no raw values of their own; the rule is that any
+   literal that appears more than once belongs here instead.
+
+   Three constraints shape the palette:
+
+   - It is achromatic apart from a single accent. Colour on a news page should
+     come from photography, not from chrome competing with it.
+   - Every text colour meets WCAG AA (4.5:1) against its surface in BOTH
+     themes. `ink-faint` previously sat at 2.81:1 in light mode while being
+     used for timestamps, counts and captions, which is real text and was
+     failing outright.
+   - The dark theme is a pure token swap, never a second set of components.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* Ink — text, in descending emphasis.
+     Contrast against --color-surface is noted for each; all clear AA. */
+  --color-ink: #0a0a0a; /* 20.1:1 */
+  --color-ink-muted: #6b6b6b; /* 5.33:1 */
+  --color-ink-faint: #757575; /* 4.61:1 — was #9a9a9a at 2.81:1, an AA failure */
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f4f4f5;
+  --color-surface-raised: #fafafa;
+
+  /* Lines */
+  --color-rule: #e6e6e6;
+  --color-rule-strong: #d4d4d4;
+
+  /* Accent.
+     The supplied mockup is entirely monochrome, which is correct for the
+     photography but leaves the chrome inert. One accent is introduced, and only
+     one: a deep editorial red, the traditional newspaper masthead colour. It is
+     desaturated well below full chroma so it never competes with the images,
+     and it appears in exactly three places — the active section underline, the
+     category kicker above a headline, and link hover. */
+  --color-brand: #b02e26; /* 6.43:1 */
+  --color-brand-soft: #f7ecea;
+  --color-danger: #b42318;
+
+  /* Families — bound to the next/font variables set in layout.tsx */
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale.
+     Read off the mockup, then opened up one step: the original 13px body and
+     13px nav sat below the threshold where sustained reading is comfortable,
+     which is the wrong trade for a product whose entire job is reading. Body
+     and nav are now 14px with a looser measure; the display sizes grew to keep
+     the hierarchy gap intact. */
+  --text-wordmark: 1.25rem;
+  --text-wordmark--line-height: 1;
+  --text-kicker: 0.6875rem;
+  --text-kicker--line-height: 1rem;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.1rem;
+  --text-nav: 0.875rem;
+  --text-nav--line-height: 1.25rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.55;
+  --text-title-sm: 1.125rem;
+  --text-title-sm--line-height: 1.3;
+  --text-title-lg: 1.375rem;
+  --text-title-lg--line-height: 1.25;
+  --text-section: 1.75rem;
+  --text-section--line-height: 1.15;
+  /* Display sizes. Components were reaching for arbitrary values
+     (text-[1.875rem], text-[2.25rem], text-[2.625rem], text-[2.375rem]) which
+     is how a type scale stops being a scale. These are the four that were
+     actually in use, named. */
+  --text-lead: 1.0625rem;
+  --text-lead--line-height: 1.55;
+  --text-display-sm: 1.875rem;
+  --text-display-sm--line-height: 1.08;
+  --text-display-md: 2.25rem;
+  --text-display-md--line-height: 1.05;
+  --text-display-lg: 2.625rem;
+  --text-display-lg--line-height: 1.02;
+
+  /* Radii */
+  --radius-card: 0.75rem;
+  --radius-thumb: 0.5rem;
+
+  /* Vertical rhythm.
+     Fourteen distinct `mt-*` values were in use, six of them inside a 4-14px
+     band, which is noise rather than rhythm. These five steps replace them:
+     every gap between elements is one of them.
+
+     Names here are not free: Tailwind v4 derives utilities from the token, and
+     the spacing scale feeds `inline-*` (logical width) as well as `mt-*`/`p-*`.
+     Naming this step `block` therefore generated a *second* `.inline-block`
+     rule — `inline-size: var(--spacing-block)` — which, sharing specificity
+     with the display utility and coming later, won. Every `inline-block`
+     element in the app was silently pinned to 24px with its text overflowing.
+     It presents as a mysterious layout bug with no width in sight, and cost two
+     debugging sessions before the collision was visible. Avoid any step named
+     after a Tailwind keyword (`block`, `auto`, `full`, `fit`, `min`, `max`). */
+  --spacing-tight: 0.375rem; /* label to the thing it labels */
+  --spacing-element: 0.875rem; /* between parts of one component */
+  --spacing-stack: 1.5rem; /* between components */
+  --spacing-section: 3rem; /* between sections of a page */
+  --spacing-band: 4.5rem; /* between major bands on the front page */
+
+  /* Layout */
+  --spacing-gutter: 1.5rem;
+  --container-page: 75rem;
+  --container-prose: 46rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+/* Dark theme — the same tokens, re-pointed.
+   Light is the default and the system preference is deliberately NOT followed:
+   the design is a light editorial page, and a reader whose OS happens to be in
+   dark mode should still land on the intended one. Dark is opt-in through the
+   masthead toggle, which sets [data-theme="dark"] and remembers the choice. */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-ink: #f5f5f5;
+    --color-ink-muted: #a1a1a1;
+    --color-ink-faint: #8a8a8a; /* 5.66:1 */
+    --color-surface: #0c0c0d;
+    --color-surface-sunken: #08080a;
+    --color-surface-raised: #141416;
+    --color-rule: #262628;
+    --color-rule-strong: #3a3a3d;
+    /* Lifted and desaturated for dark surfaces: the light-mode red goes muddy
+       against near-black and falls below AA contrast. */
+    --color-brand: #f2726a;
+    --color-brand-soft: #2a1614;
+    --color-danger: #f97066;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    @apply font-sans;
+  }
+
+  body {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    @apply bg-background text-foreground;
+  }
+
+
+  /* Every interactive control shows a pointer.
+     `<button>` defaults to `cursor: default` in every browser, which reads as
+     "not clickable" — and shadcn/Radix do not override it. Setting it once here
+     covers every button, accordion trigger, select trigger, checkbox, sheet
+     close and native control, including ones added later; adding
+     `cursor-pointer` per call site is the version of this that drifts the
+     moment someone forgets. Disabled controls say so instead. */
+  button:not(:disabled),
+  summary,
+  select:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  label:has(> input[type="checkbox"]),
+  label:has(> button[role="checkbox"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* One visible, consistent focus treatment across every interactive element.
+     Defined once here rather than repeated per-component (DRY). */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-surface);
+  }
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Kicker typography as a single class, so the five declarations that always
+     travel together are stated once rather than repeated at each call site. */
+  .kicker {
+    font-size: var(--text-kicker);
+    line-height: var(--text-kicker--line-height);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    /* A kicker sits beside badges in narrow columns and must never wrap or be
+       compressed below its own text. */
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Horizontal scroll rails (the mobile category nav) without a visible bar */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* `type="search"` inputs get a browser-drawn clear button in WebKit. We draw
+     our own, styled and positioned to the design, so the native one has to go
+     or the field ends up with two clear controls side by side. */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Clamp helpers used by story headlines and excerpts */
+  .line-clamp-2-safe {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
+
+/* Editorial prose for the reader page.
+   Publisher HTML arrives with its own class names and no styling of ours, so
+   the rules are scoped to `.article-body` and target bare elements. Measure is
+   capped near 70 characters, which is the range sustained reading is
+   comfortable in. */
+.article-body {
+  color: var(--color-ink);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.article-body > * + * {
+  margin-top: 1.25em;
+}
+
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin-top: 2em;
+}
+
+.article-body h2 {
+  font-size: 1.375rem;
+}
+.article-body h3 {
+  font-size: 1.1875rem;
+}
+
+.article-body a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--color-brand);
+  text-underline-offset: 3px;
+}
+
+.article-body a:hover {
+  text-decoration: none;
+}
+
+.article-body blockquote {
+  border-left: 3px solid var(--color-brand);
+  padding-left: 1.125rem;
+  font-style: italic;
+  color: var(--color-ink-muted);
+}
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.25rem;
+}
+
+.article-body ul {
+  list-style: disc;
+}
+.article-body ol {
+  list-style: decimal;
+}
+
+.article-body li + li {
+  margin-top: 0.5em;
+}
+
+.article-body img {
+  border-radius: var(--radius-thumb);
+  max-width: 100%;
+  height: auto;
+}
+
+.article-body figcaption {
+  color: var(--color-ink-faint);
+  font-size: var(--text-meta);
+  margin-top: 0.5rem;
+}
+
+/* The Guardian's live-blog bodies carry per-block timestamps. Left visible but
+   set back, so they read as structure rather than as body copy. */
+.article-body .block-time {
+  color: var(--color-ink-faint);
+  font-size: var(--text-meta);
+}
+
+/* Material Symbols: the rounded set at a weight that matches the mockup's
+   hairline icons. Sized by the consuming component via font-size. */
+.material-symbols-rounded {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 300,
+    "GRAD" 0,
+    "opsz" 24;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@theme inline {
+  /* shadcn's font slots, pointed at the VOICE families. The generated block
+     defined --font-sans in terms of itself, a circular reference that resolved
+     to nothing and dropped the whole app back to the browser default face. */
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  /* shadcn's own accent mapping. Restored to its real name: a blanket rename
+     of the VOICE brand token had caught these two lines as well, so shadcn's
+     hover-surface value was overwriting --color-brand and every kicker was
+     rendering in near-white. */
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  /* shadcn's semantic layer, mapped onto the VOICE palette.
+     Its components are built against these names, so mapping them here is what
+     makes an imported Select or Sheet look like the rest of the product rather
+     than like stock shadcn. Note `--accent` is shadcn's *hover surface*, not a
+     brand colour; the VOICE accent is `--color-brand`. */
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-ink);
+  --primary-foreground: var(--color-surface);
+  --secondary: var(--color-surface-sunken);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-surface-sunken);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-surface-sunken);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --border: var(--color-rule);
+  --input: var(--color-rule);
+  --ring: var(--color-ink);
+  --radius: 0.625rem;
+  --sidebar: var(--color-surface);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-ink);
+  --sidebar-primary-foreground: var(--color-surface);
+  --sidebar-accent: var(--color-surface-sunken);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-rule);
+  --sidebar-ring: var(--color-ink);
+}
+
+/* No separate dark block: every mapped value above resolves to a VOICE token,
+   and those already swap under [data-theme="dark"], so the shadcn layer follows
+   the theme automatically. */

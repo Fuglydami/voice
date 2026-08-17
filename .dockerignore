@@ -1,0 +1,22 @@
+# Build artefacts and dependencies are produced inside the image.
+node_modules
+.next
+out
+build
+
+# Never copy secrets into the build context.
+.env
+.env.*
+!.env.example
+
+# Version control and editor noise
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Local-only files
+npm-debug.log*
+coverage
+*.local

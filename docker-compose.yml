@@ -1,0 +1,19 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: voice:latest
+    container_name: voice
+    ports:
+      - "3000:3000"
+    environment:
+      # Read from a local .env if present. Every key is optional — with none
+      # set, the app serves its bundled sample newsroom, so `docker compose up`
+      # works on a fresh clone with no signup required.
+      NEWSAPI_KEY: ${NEWSAPI_KEY:-}
+      GUARDIAN_KEY: ${GUARDIAN_KEY:-}
+      NYT_KEY: ${NYT_KEY:-}
+      PROVIDER_TIMEOUT_MS: ${PROVIDER_TIMEOUT_MS:-10000}
+      PROVIDER_CACHE_SECONDS: ${PROVIDER_CACHE_SECONDS:-300}
+    restart: unless-stopped

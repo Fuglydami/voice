@@ -1,69 +1,132 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import { CategorySchema, CATEGORY_LABELS } from "@/domain/article";
+import { ArticleQuerySchema } from "@/domain/query";
+import { aggregate } from "@/providers/aggregator";
+import { availableProviders } from "@/providers/registry";
+import { trendingAuthors } from "@/lib/trending";
+import { HeroArticle } from "@/components/article/HeroArticle";
+import { StoryList } from "@/components/article/StoryRow";
+import { ArticleGrid } from "@/components/article/ArticleCard";
+import { SectionBand, buildBands } from "@/components/article/SectionBand";
+import { Section } from "@/components/ui/section-heading";
+import { TrendingAuthors } from "@/components/article/TrendingAuthors";
+import { EmptyState, PartialSourceNotice } from "@/components/ui/States";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+/**
+ * Top News — the screen from the mockup. A Server Component that calls the
+ * aggregator directly rather than fetching its own `/api/articles`: going
+ * through HTTP would be the server round-tripping to itself. The route handler
+ * exists for the client-side pages, which genuinely need it.
+ */
+
+export const metadata: Metadata = { title: "Top News" };
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+
+  const category = CategorySchema.safeParse(params.category);
+  const view = typeof params.view === "string" ? params.view : undefined;
+
+  const query = ArticleQuerySchema.parse({
+    categories: category.success ? category.data : undefined,
+    pageSize: 24,
+  });
+
+  const { articles, sources } = await aggregate(availableProviders(), query);
+
+  // "Top" leads with the most prominent story; "Latest" is strictly
+  // reverse-chronological — otherwise the two views are one page with two names.
+  const ordered = view === "latest" ? articles : byProminence(articles);
+
+  const [hero, ...rest] = ordered;
+  const sidebar = rest.slice(0, 3);
+  const failed = sources.filter((source) => !source.ok);
+
+  // Grouped into category bands, except when already narrowed to one category.
+  const remainder = rest.slice(3);
+  const bands = category.success ? [] : buildBands(remainder);
+  const banded = new Set(bands.flatMap((band) => band.articles.slice(0, 4).map((a) => a.id)));
+  const ungrouped = remainder.filter((article) => !banded.has(article.id)).slice(0, 8);
+
+  const heading = category.success
+    ? CATEGORY_LABELS[category.data]
+    : view === "latest"
+      ? "Latest"
+      : "Top News";
+
+  if (!hero) {
+    return (
+      <>
+        <div className="mb-stack">
+          <PartialSourceNotice failed={failed} hasResults={false} />
+        </div>
+        <EmptyState
+          title={
+            sources.length === 0 ? "No sources configured" : "No stories in this section right now"
+          }
+          description={
+            sources.length === 0
+              ? "Add at least one of NEWSAPI_KEY, GUARDIAN_KEY or NYT_KEY to your .env file and restart. See the README for where to get them."
+              : "The configured sources have not published here recently. Try another section, or search across everything."
+          }
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {failed.length > 0 ? (
+        <div className="mb-stack">
+          <PartialSourceNotice failed={failed} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      ) : null}
+
+      {/* The heading is visually hidden: the mockup leads straight into the
+          photograph, but the document still needs an h1 before the content. */}
+      <h1 className="sr-only">{heading}</h1>
+
+      <div className="grid gap-x-10 gap-y-10 lg:grid-cols-[1.62fr_1fr]">
+        <HeroArticle article={hero} />
+
+        <aside aria-label="More stories" className="lg:pl-2">
+          <div className="border-rule -mt-5 border-t-0 lg:mt-0">
+            <StoryList articles={sidebar} />
+          </div>
+
+          <TrendingAuthors authors={trendingAuthors(articles)} />
+        </aside>
+      </div>
+
+      {bands.map((band) => (
+        <SectionBand key={band.category} category={band.category} articles={band.articles} />
+      ))}
+
+      {ungrouped.length > 0 ? (
+        <Section id="more-stories" title="More stories">
+          <ArticleGrid articles={ungrouped} columns={4} />
+        </Section>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * "Top" ordering: stories from the best-represented publications float up,
+ * recency breaking ties. A crude proxy for prominence — none of the three APIs
+ * exposes a popularity signal — but deterministic.
+ */
+function byProminence<T extends { publication: string; publishedAt: string }>(articles: T[]): T[] {
+  const weight = new Map<string, number>();
+  for (const article of articles) {
+    weight.set(article.publication, (weight.get(article.publication) ?? 0) + 1);
+  }
+
+  return [...articles].sort(
+    (a, b) =>
+      (weight.get(b.publication) ?? 0) - (weight.get(a.publication) ?? 0) ||
+      Date.parse(b.publishedAt) - Date.parse(a.publishedAt),
   );
 }
