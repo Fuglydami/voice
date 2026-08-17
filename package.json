@@ -2,6 +2,12 @@
   "name": "voice",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
+  "author": "Damilare Oyedeji",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fuglydami/voice.git"
+  },
   "description": "VOICE — a multi-source news aggregator built with Next.js 16, React 19 and TypeScript.",
   "scripts": {
     "dev": "next dev",

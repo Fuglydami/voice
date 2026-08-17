@@ -14,7 +14,7 @@ Tailwind CSS v4 · shadcn/ui (Radix) · TanStack Query · Zustand · Zod · Vite
 ### With Docker (no Node.js needed)
 
 ```bash
-git clone <this-repo> voice && cd voice
+git clone https://github.com/Fuglydami/voice.git && cd voice
 cp .env.example .env          # optional — see "API keys" below
 docker compose up --build
 ```
@@ -314,3 +314,17 @@ and a native `<dialog>` for the menu so focus management is the platform's job, 
 [`IMPLEMENTATION.md`](./IMPLEMENTATION.md) — the plan this was built against: measured design
 tokens, the provider abstraction in detail, step-by-step build order with acceptance criteria, and
 the risk register.
+
+---
+
+## Licence
+
+The source code is [MIT licensed](./LICENSE).
+
+That covers this application's own code and nothing else. Headlines, article text, photographs and
+the accompanying metadata are the property of the publishers who produced them and are served here
+under each provider's API terms — see [NewsAPI](https://newsapi.org/terms),
+[The Guardian Open Platform](https://www.theguardian.com/open-platform/terms-and-conditions) and
+[the NYT developer terms](https://developer.nytimes.com/terms). Every article on this site credits
+its publication and links back to the original, and no source's full text is republished beyond
+what its API returns.
